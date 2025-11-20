@@ -23,21 +23,20 @@
       width: 100%;
     }
 
-    #timer {
-      font-size: 56px;
-      font-weight: 600;
-      margin: 10px 0;
-      color: #37352f; /* couleur texte Notion */
+    /* Cercle de progression */
+    .progress-ring {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
     }
 
-    input {
-      width: 80px;
-      padding: 8px;
-      font-size: 16px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      text-align: center;
+    #timer {
+      font-size: 48px;
+      font-weight: 600;
+      color: #37352f;
+      margin-top: -140px;
+      cursor: text;
+      outline: none;
     }
 
     button {
@@ -47,7 +46,7 @@
       border-radius: 10px;
       font-size: 15px;
       cursor: pointer;
-      background: #2e69ff; /* bleu Notion */
+      background: #2e69ff;
       color: white;
       font-weight: 500;
     }
@@ -60,11 +59,16 @@
 <body>
   <div class="container">
 
-    <input id="custom" type="number" min="1" value="25" /> min
+    <!-- Cercle SVG -->
+    <svg class="progress-ring" viewBox="0 0 100 100">
+      <circle id="progress-bg" cx="50" cy="50" r="45" stroke="#e5e5e5" stroke-width="6" fill="none"/>
+      <circle id="progress" cx="50" cy="50" r="45" stroke="#2e69ff" stroke-width="6" fill="none" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+    </svg>
 
-    <div id="timer">25:00</div>
+    <!-- Timer modifiable directement -->
+    <div id="timer" contenteditable="true">25:00</div>
 
-    <button onclick="applyCustom()">Set</button>
+    <button onclick="applyEditable()">Set</button>
     <button onclick="startTimer()">Start</button>
     <button onclick="pauseTimer()">Pause</button>
     <button onclick="resetTimer()">Reset</button>
@@ -75,18 +79,33 @@
     let remaining = duration;
     let interval = null;
 
+    const circle = document.getElementById('progress');
+    const circumference = 2 * Math.PI * 45;
+    circle.style.strokeDasharray = circumference;
+    circle.style.strokeDashoffset = circumference;
+
+    function updateCircle() {
+      const percent = remaining / duration;
+      circle.style.strokeDashoffset = circumference * (1 - percent);
+    }
+
     function updateDisplay() {
       const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
       const seconds = (remaining % 60).toString().padStart(2, '0');
       document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+      updateCircle();
     }
 
-    function applyCustom() {
-      const custom = parseInt(document.getElementById('custom').value);
-      if (custom > 0) {
-        duration = custom * 60;
-        remaining = duration;
-        updateDisplay();
+    function applyEditable() {
+      const txt = document.getElementById('timer').textContent;
+      const parts = txt.split(':');
+      if (parts.length === 2) {
+        const min = parseInt(parts[0]);
+        if (!isNaN(min) && min > 0) {
+          duration = min * 60;
+          remaining = duration;
+          updateDisplay();
+        }
       }
     }
 
